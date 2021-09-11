@@ -7,11 +7,12 @@ Contributed by:     @icemelting, @Sygmus-1897, @Lazycl0ud
 import discord
 from discord.ext import commands
 import logging
-from discord.ext.commands.core import group
 from dotenv import load_dotenv
 import os
+
 from utils.db_operations import *
 from constants.emoji_unicodes import *
+
 
 load_dotenv()
 
@@ -26,21 +27,18 @@ logger.addHandler(handler)
 token = os.environ['BOT_TOKEN']
 
 
-# --- global variable declaration
-server_id = prefix_db_fp = server_prefix = selected_channel = prefix_dict = None
+# --- global variable declaration ---
+server_id = server_prefix = selected_channel = prefix_dict = None
 
 
 # --- global variable initialization method --- 
 def getPrefix (client, message):
-    global server_id, prefix_db_fp, server_prefix, selected_channel, prefix_dict
+    global server_id, server_prefix, selected_channel, prefix_dict
 
     if (server_id != str(message.guild.id)):
         server_id = str(message.guild.id)
-        prefix_db_fp = 'server_prefix_db.json'
-
-        if (not os.path.isfile(prefix_db_fp)):
-            writeDB({ server_id: { "prefix": "/sc", "channel": "any" } })
-
+        
+        checkAndCreateDB(server_id)
         prefix_dict = readDB()
         
         if (server_id not in prefix_dict):
@@ -123,6 +121,18 @@ async def sendPrefix(message):
 
 
 # --- Dependent Commands (i.e. Dependent on Server Prefix) ---
+@client.command()
+async def clear(ctx, *, amount = 10):
+    await ctx.channel.purge(limit=amount)
+
+
+@client.command()
+async def hello(ctx): 
+    embed_var = discord.Embed(description='Hi', color=8388640)
+    await ctx.channel.send(embed=embed_var)
+    await react(1, ctx.message)
+
+
 ## --- Grouped Commands (Set Prefix and Set Channel) ---
 @client.group(aliases=['set'], invoke_without_subcommand=True)
 async def _set(ctx):
@@ -161,18 +171,6 @@ async def setChannel(ctx):
             updateGlobalVariables()
             embed_var = discord.Embed(description='Channel Set', color=8388640)
             await ctx.message.channel.send(embed=embed_var)
-    await react(1, ctx.message)
-
-
-@client.command()
-async def clear(ctx, *, amount = 10):
-    await ctx.channel.purge(limit=amount)
-
-
-@client.command()
-async def hello(ctx): 
-    embed_var = discord.Embed(description='Hi', color=8388640)
-    await ctx.channel.send(embed=embed_var)
     await react(1, ctx.message)
 
 
