@@ -1,6 +1,6 @@
 '''
 Version:            0.2
-Date last modified: 10-09-2021
+Date last modified: 11-09-2021
 Contributed by:     @icemelting, @Sygmus-1897, @Lazycl0ud
 '''
 
@@ -13,9 +13,10 @@ import os
 from utils.db_operations import *
 from constants.emoji_unicodes import *
 
-# global server_id, prefix_db_fp, server_prefix, selected_channel, prefix_dict
 load_dotenv()
 
+
+# -- Logger Initialization --
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(filename='debug.log', encoding='utf-8', mode='w')
@@ -24,8 +25,12 @@ logger.addHandler(handler)
 
 token = os.environ['BOT_TOKEN']
 
+
+# --- global variable declaration
 server_id = prefix_db_fp = server_prefix = selected_channel = prefix_dict = None
 
+
+# --- global variable initialization method --- 
 def getPrefix (client, message):
     global server_id, prefix_db_fp, server_prefix, selected_channel, prefix_dict
 
@@ -48,13 +53,15 @@ def getPrefix (client, message):
     return server_prefix
 
 
+# --- client object initialization ---
 client = commands.Bot(command_prefix = getPrefix)
 
-async def react(k, message):
-    if k>0:
-        await message.add_reaction(THUMBS_UP)
-    else:
-        await message.add_reaction(THUMBS_DOWN)
+
+# --- on_ready and on_message ---
+@client.event
+async def on_ready():
+    print('We have logged in as {0.user}'.format(client))
+
 
 @client.event
 async def on_message(message):
@@ -79,6 +86,9 @@ async def on_message(message):
     await client.process_commands(message)
 
 
+
+
+# --- Indepedent Commands (i.e. Not Dependent on Server Prefix) ---
 async def showChannel(message):
     channel_name = 'any'
     for channel in message.guild.channels:
@@ -105,7 +115,15 @@ async def resetChannel(message):
     await react(1, message)
 
 
-# @client.command(aliases=['set prefix'])
+async def sendPrefix(message):
+    embed_var = discord.Embed(title="Prefix:", description=prefix_dict[server_id]['prefix'], color=8388640)
+    await message.channel.send(embed=embed_var)
+    await react(1, message)
+
+
+
+# --- Dependent Commands (i.e. Dependent on Server Prefix) ---
+## --- Grouped Commands (Set Prefix and Set Channel) ---
 @client.group(aliases=['set'], invoke_without_subcommand=True)
 async def _set(ctx):
     pass
@@ -132,24 +150,6 @@ async def setPrefix(ctx):
         await react(0, ctx.message)
 
 
-async def sendPrefix(message):
-    embed_var = discord.Embed(title="Prefix:", description=prefix_dict[server_id]['prefix'], color=8388640)
-    await message.channel.send(embed=embed_var)
-    await react(1, message)
-
-
-@client.event
-async def on_ready():
-    print('We have logged in as {0.user}'.format(client))
-
-
-@client.command()
-async def hello(ctx): 
-    embed_var = discord.Embed(description='Hi', color=8388640)
-    await ctx.channel.send(embed=embed_var)
-    await react(1, ctx.message)
-
-
 @_set.command(aliases=['channel'])
 async def setChannel(ctx):
     words = ctx.message.content.split()
@@ -164,16 +164,33 @@ async def setChannel(ctx):
     await react(1, ctx.message)
 
 
+@client.command()
+async def clear(ctx, *, amount = 10):
+    await ctx.channel.purge(limit=amount)
+
+
+@client.command()
+async def hello(ctx): 
+    embed_var = discord.Embed(description='Hi', color=8388640)
+    await ctx.channel.send(embed=embed_var)
+    await react(1, ctx.message)
+
+
+
+# --- Helper Functions ---
+async def react(k, message):
+    if k>0:
+        await message.add_reaction(THUMBS_UP)
+    else:
+        await message.add_reaction(THUMBS_DOWN)
+
+
 def updateGlobalVariables():
     global server_id, server_prefix, selected_channel
     new_prefix_dict = readDB()
     server_prefix = new_prefix_dict[server_id]["prefix"]
     selected_channel = new_prefix_dict[server_id]["channel"]
 
-
-@client.command()
-async def clear(ctx, *, amount = 10):
-    await ctx.channel.purge(limit=amount)
 
 
 
