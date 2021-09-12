@@ -1,143 +1,218 @@
 '''
 Version:            0.2
-Date last modified: 10-09-2021
+Date last modified: 11-09-2021
 Contributed by:     @icemelting, @Sygmus-1897, @Lazycl0ud
 '''
 
-from discord.ext import commands
 import discord
 import logging
-import json
+import os
+from discord.ext import commands
+from dotenv import load_dotenv
 
+from utils.readWriteDB import *
+from constants.emoji_unicodes import *
+
+
+load_dotenv()
+
+
+# -- Logger Initialization --
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(filename='debug.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
-token = <BOT_TOKEN>
-client = discord.Client()
 
-async def initcache():
-    global dict_prefix, filepath_db_prefix
-    filepath_db_prefix = 'db_prefix.json'
-    try:
-        with open(filepath_db_prefix, 'r') as db_prefix:
-            dict_prefix = json.load(db_prefix)
-            db_prefix.close
-    except:
-        with open(filepath_db_prefix, 'w') as db_prefix:
-            json.dump({}, db_prefix, indent = 4)
-            db_prefix.close
-        with open(filepath_db_prefix, 'r') as db_prefix:
-            dict_prefix = json.load(db_prefix)
-            db_prefix.close
-    return dict_prefix
+# --- global variable declaration ---
+token = os.environ['BOT_TOKEN']
+id_guild = prefix_guild = channel_guild = dict_db_guild = None
+prefix_bot = '/sc'
+channel_bot = 'any'
 
-async def react(k, message):
-    if k>0:
-        await message.add_reaction('\U0001f44d')
-    else:
-        await message.add_reaction('\U0001f44e')
 
+# --- global variable initialization method --- 
+def getPrefix(client, message):
+    global id_guild, prefix_guild, channel_guild
+    id_guild = str(message.guild.id)
+    prefix_guild = dict_db_guild[id_guild]['prefix']
+    channel_guild = dict_db_guild[id_guild]['channel']
+    return prefix_guild
+
+
+# --- client object initialization ---
+client = commands.Bot(command_prefix = getPrefix)
+
+
+# --- get the guild ID's during start up ---
+async def getGuildsOnStartup():
+    global dict_db_guild
+    checkAndCreateDB()
+    dict_db_guild = readDB()
+    for i_guild in client.guilds:
+        if (not (str(i_guild.id) in dict_db_guild)):
+            dict_db_guild.update({ str(i_guild.id): { 'prefix': prefix_bot, 'channel': channel_bot } })
+            writeDB(dict_db_guild)
+    return
+
+
+# --- client events ---
 @client.event
 async def on_ready():
+    await getGuildsOnStartup()
     print('We have logged in as {0.user}'.format(client))
-    await initcache()
     return
-
+    
 @client.event
 async def on_message(message):
-    global prefix, bot, set_channel
-    i = 0
-
     if message.author == client.user:
         return
-    else:
-        id_server = str(message.guild.id)
-        if id_server in dict_prefix:
-            prefix = dict_prefix[id_server]['prefix']
-            set_channel = dict_prefix[id_server]['channel']
-        else:
-            prefix = '/sc'
-            set_channel = 'any'
-            dict_prefix.update({id_server: {'prefix':prefix, 'channel': set_channel}})
-            with open(filepath_db_prefix, 'w') as db_prefix:
-                json.dump(dict_prefix, db_prefix, indent = 4)
-                db_prefix.close
-
-    if message.content.startswith(prefix+'set channel'):
-        words = message.content.split()
-        set_channel = words[2]
-        for every_channel in message.guild.channels:
-            if ((set_channel == str(every_channel.id)) and (str(type(every_channel)) == '<class \'discord.channel.TextChannel\'>')):
-                dict_prefix.update({id_server: {'prefix':prefix, 'channel':set_channel}})
-                with open(filepath_db_prefix, 'w') as db_prefix:
-                    json.dump(dict_prefix, db_prefix, indent = 4)
-                    db_prefix.close
-                embed_var = discord.Embed(description='Channel Set', color=8388640)
-                await message.channel.send(embed=embed_var)
-                i += 1
-        await react(i, message)
-        
+    getPrefix(0, message)
     if message.content.startswith('?channel'):
-        name_channel = 'Any'
-        for every_channel in message.guild.channels:
-            if (set_channel == str(every_channel.id)):
-                name_channel = every_channel.name
-        embed_var = discord.Embed(title="Set Channel:", description=name_channel, color=8388640)
-        await message.channel.send(embed=embed_var)
-        i += 1
-        await react(i, message)
-        return
-
+        await showChannel(message)
     if message.content.startswith('?reset prefix'):
-        prefix = '/sc'
-        dict_prefix.update({id_server: {'prefix':prefix, 'channel':set_channel}})
-        with open(filepath_db_prefix, 'w') as db_prefix:
-            json.dump(dict_prefix, db_prefix, indent = 4)
-            db_prefix.close
-        i += 1
-        await react(i, message)
-
+        await resetPrefix(message)
     if message.content.startswith('?reset channel'):
-        set_channel = 'any'
-        dict_prefix.update({id_server: {'prefix':prefix, 'channel':set_channel}})
-        with open(filepath_db_prefix, 'w') as db_prefix:
-            json.dump(dict_prefix, db_prefix, indent = 4)
-            db_prefix.close
-        i += 1
-        await react(i, message)
-            
-    if set_channel == str(message.channel.id) or set_channel == 'any':
-        if message.content.startswith(prefix+'set prefix'):
-            words = message.content.split()
-            if len(words) > 2:
-                prefix = words[2]
-                dict_prefix.update({id_server: {'prefix':prefix, 'channel':set_channel}})
-                with open(filepath_db_prefix, 'w') as db_prefix:
-                    json.dump(dict_prefix, db_prefix, indent = 4)
-                    db_prefix.close
-                i += 1
-            await react(i, message)
-            
-        if message.content.startswith('?prefix'):
-            embed_var = discord.Embed(title="Prefix:", description=prefix, color=8388640)
-            await message.channel.send(embed=embed_var)
-            i += 1
-            await react(i, message)
-            return
-
-        if message.content.startswith(prefix+'hello'):
-            embed_var = discord.Embed(description='Hi', color=8388640)
-            await message.channel.send(embed=embed_var)
-            i += 1
-            await react(i, message)
-    bot = commands.Bot(command_prefix=prefix)
+        await resetGuildChannel(message)       
+    if message.content.startswith('?prefix'):
+        await showPrefix(message)
+    await client.process_commands(message)
+    return
+    
+@client.event
+async def on_guild_join(guild):
+    id_guild = str(guild.id)
+    dict_db_guild.update( { id_guild: { 'prefix': prefix_bot, 'channel': channel_bot } } )
+    writeDB(dict_db_guild)
+    return
+    
+@client.event
+async def on_guild_remove(guild):
+    id_guild = str(guild.id)
+    dict_db_guild.pop(id_guild)
+    writeDB(dict_db_guild)
     return
 
-def main():
-    client.run(token)
 
-if __name__ == '__main__':
-    main()
+# --- Indepedent Commands (i.e. Not Dependent on Server Prefix) ---
+async def showChannel(message):
+    channel_name = 'any'
+    for channel in message.guild.channels:
+        if (channel_guild == str(channel.id)):
+            channel_name = channel.name
+    embed_var = discord.Embed(title="Set Channel:", description=channel_name, color=8388640)
+    await message.channel.send(embed=embed_var)
+    await react(1, message)
+    return
+
+async def resetPrefix(message):
+    dict_db_guild.update({ id_guild: { 'prefix': prefix_bot, 'channel': channel_guild}})
+    writeDB(dict_db_guild)
+    updateGlobalVariables()
+    await react(1, message)
+    return
+
+async def resetGuildChannel(message):
+    dict_db_guild.update({ id_guild: { 'prefix': prefix_guild, 'channel': channel_bot }})
+    writeDB(dict_db_guild)
+    updateGlobalVariables()
+    await react(1, message)
+    return
+
+async def showPrefix(message):
+    embed_var = discord.Embed(title="Prefix:", description=dict_db_guild[id_guild]['prefix'], color=8388640)
+    await message.channel.send(embed=embed_var)
+    await react(1, message)
+    return
+
+
+# --- Dependent Commands (i.e. Dependent on Server Prefix) ---
+@client.command()
+async def clear(ctx, *, amount = 10):
+    await ctx.channel.purge(limit=amount)
+    return
+
+@client.command()
+async def hello(ctx): 
+    embed_var = discord.Embed(description='Hi', color=8388640)
+    await ctx.channel.send(embed=embed_var)
+    await react(1, ctx.message)
+    return
+
+
+# --- Commands to skip ---
+@client.command()
+async def channel(ctx): 
+    pass
+    
+@client.command()
+async def prefix(ctx): 
+    pass
+    
+@client.command()
+async def reset(ctx): 
+    pass
+
+
+## --- Grouped Commands (Set Prefix and Set Channel) ---
+@client.group(aliases=['set'], invoke_without_subcommand=True)
+async def _set(ctx):
+    pass
+            
+         
+@_set.command(aliases=['prefix'])
+async def setPrefix(ctx):
+    if channel_guild == str(ctx.message.channel.id) or channel_guild == 'any':
+        words_message_content = ctx.message.content.split()
+        if len(words_message_content) > 2:
+            new_prefix_guild = words_message_content[2]
+            if (new_prefix_guild == prefix_guild):
+                await ctx.message.channel.send("Change Aborted: New Prefix is same as Old Prefix!")
+                await react(0, ctx.message)
+            else:
+                dict_db_guild.update({ id_guild: {'prefix': new_prefix_guild, 'channel': channel_guild }})
+                writeDB(dict_db_guild)
+                updateGlobalVariables()
+                await react(1, ctx.message)
+        else: 
+            await ctx.message.channel.send("Please provide the new prefix!")
+            await react(0, ctx.message)
+    else: 
+        await ctx.message.channel.send("This channel is not supported!")
+        await react(0, ctx.message)
+    return
+
+@_set.command(aliases=['channel'])
+async def setGuildChannel(ctx):
+    words_message_content = ctx.message.content.split()
+    set_channel_guild = words_message_content[2]
+    for iter_channel in ctx.message.guild.channels:
+        if ((set_channel_guild == str(iter_channel.id)) and (str(type(iter_channel)) == '<class \'discord.channel.TextChannel\'>')):
+            dict_db_guild.update({ id_guild: { 'prefix': prefix_guild, 'channel': set_channel_guild }})
+            writeDB(dict_db_guild)
+            updateGlobalVariables()
+            embed_var = discord.Embed(description='Channel Set', color=8388640)
+            await ctx.message.channel.send(embed=embed_var)
+    await react(1, ctx.message)
+    return
+
+
+# --- Helper Functions ---
+async def react(k, message):
+    if k>0:
+        await message.add_reaction(THUMBS_UP)
+    else:
+        await message.add_reaction(THUMBS_DOWN)
+    return
+
+def updateGlobalVariables():
+    global prefix_guild, channel_guild
+    dict_new_db_guild = readDB()
+    prefix_guild = dict_new_db_guild[id_guild]["prefix"]
+    channel_guild = dict_new_db_guild[id_guild]["channel"]
+    return
+
+
+# --- main ---
+client.run(token)

@@ -6,5 +6,6 @@
 3. Install the required modules from the requirements.txt file
 
 ### 2. Setup:
-1. Replace the word <BOT_TOKEN> in sinister_bot.py file with the token obtained from Discord Developer Portal<br>
+1. Create a .env file.
+2. Open .env file and enter "BOT_TOKEN=<BOT_TOKEN>" (without qoutes). Replace the word <BOT_TOKEN> with your Bot Token obtained from Discord Developer Portal
 2. Run sinister_bot.py
