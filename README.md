@@ -7,5 +7,9 @@
 
 ### 2. Setup:
 1. Create a .env file.
-2. Open .env file and enter "BOT_TOKEN=<BOT_TOKEN>" (without qoutes). Replace the word <BOT_TOKEN> with your Bot Token obtained from Discord Developer Portal
-2. Run sinister_bot.py
+2. Open .env file and update the following:
+    1. BOT_TOKEN
+    2. REDDIT_CLIENT_ID
+    3. REDDIT_CLIENT_SECRET
+    4. REDDIT_USER_AGENT
+3. Run sinister_bot.py
