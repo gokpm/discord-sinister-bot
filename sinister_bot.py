@@ -99,7 +99,7 @@ async def showChannel(message):
 
 async def resetPrefix(message):
     default_prefix = '/sc'
-    prefix_dict.update({ server_id: { 'prefix': server_prefix, 'channel': default_prefix }})
+    prefix_dict.update({ server_id: { 'prefix': default_prefix, 'channel': default_prefix }})
     writeDB(prefix_dict)
     updateGlobalVariables()
     await react(1, message)
