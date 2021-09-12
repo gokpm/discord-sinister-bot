@@ -8,8 +8,8 @@
 ### 2. Setup:
 1. Create a .env file.
 2. Open .env file and update the following:
-  > BOT_TOKEN <BR>
-  > REDDIT_CLIENT_ID <BR>
-  > REDDIT_CLIENT_SECRET <BR>
-  > REDDIT_USER_AGENT <BR>
+    1. BOT_TOKEN
+    2. REDDIT_CLIENT_ID
+    3. REDDIT_CLIENT_SECRET
+    4. REDDIT_USER_AGENT
 3. Run sinister_bot.py
