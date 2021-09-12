@@ -11,7 +11,7 @@ import asyncpraw
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from utils.readWriteDB import *
+from utils.readWrite import *
 from utils.clashofclansrecruit import *
 from constants.emoji_unicodes import *
 
