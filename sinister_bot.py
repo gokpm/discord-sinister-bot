@@ -7,10 +7,12 @@ Contributed by:     @icemelting, @Sygmus-1897, @Lazycl0ud
 import discord
 import logging
 import os
+import asyncpraw
 from discord.ext import commands
 from dotenv import load_dotenv
 
 from utils.readWriteDB import *
+from utils.clashofclansrecruit import *
 from constants.emoji_unicodes import *
 
 
@@ -31,6 +33,7 @@ id_guild = prefix_guild = channel_guild = dict_db_guild = None
 prefix_bot = '/sc'
 channel_bot = 'any'
 
+checkAndCreateDB()
 
 # --- global variable initialization method --- 
 def getPrefix(client, message):
@@ -48,7 +51,6 @@ client = commands.Bot(command_prefix = getPrefix)
 # --- get the guild ID's during start up ---
 async def getGuildsOnStartup():
     global dict_db_guild
-    checkAndCreateDB()
     dict_db_guild = readDB()
     for i_guild in client.guilds:
         if (not (str(i_guild.id) in dict_db_guild)):
@@ -213,6 +215,6 @@ def updateGlobalVariables():
     channel_guild = dict_new_db_guild[id_guild]["channel"]
     return
 
-
 # --- main ---
+client.loop.create_task(scoutReport(client))
 client.run(token)
