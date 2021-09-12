@@ -141,6 +141,20 @@ async def hello(ctx):
     return
 
 
+# --- Commands to skip ---
+@client.command()
+async def channel(ctx): 
+    pass
+    
+@client.command()
+async def prefix(ctx): 
+    pass
+    
+@client.command()
+async def reset(ctx): 
+    pass
+
+
 ## --- Grouped Commands (Set Prefix and Set Channel) ---
 @client.group(aliases=['set'], invoke_without_subcommand=True)
 async def _set(ctx):
