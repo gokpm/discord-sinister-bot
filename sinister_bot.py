@@ -1,6 +1,5 @@
 '''
-Version:            0.2
-Date last modified: 11-09-2021
+Date last modified: 12-09-2021
 Contributed by:     @icemelting, @Sygmus-1897, @Lazycl0ud
 '''
 
