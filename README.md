@@ -12,4 +12,4 @@
   2.REDDIT_CLIENT_ID
   3.REDDIT_CLIENT_SECRET
   4.REDDIT_USER_AGENT
-4. Run sinister_bot.py
+3. Run sinister_bot.py
