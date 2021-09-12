@@ -1,25 +1,14 @@
 import asyncpraw
 import json
 import os
-from utils.readWriteDB import *
+from utils.readWrite import *
 import discord
 import asyncio
 
-async def cache(file_open_mode):
-    fp_cache_reddit = r'cache_reddit.json'
-    global archive
-    if file_open_mode == 'r':
-        with open(fp_cache_reddit, 'r') as cache_reddit:
-            archive = json.load(cache_reddit)
-    elif file_open_mode == 'r+':
-        archive.append(post.id)
-        with open(fp_cache_reddit, 'r+') as cache_reddit:
-                json.dump(archive, cache_reddit, indent = 4)
-    return
-
 async def redditLogin():
-    await cache('r')
+    global archive
     global list_post
+    archive = readRedditCache()
     reddit = asyncpraw.Reddit(
     client_id=os.environ['REDDIT_CLIENT_ID'],
     client_secret=os.environ['REDDIT_CLIENT_SECRET'],
@@ -40,7 +29,8 @@ async def scoutReport(client):
             if not post.id in archive:
                 post_content = post.title + ' ' + post.selftext
                 post_content = post_content.lower().split()
-                await cache('r+')
+                archive.append(post.id)
+                writeRedditCache(archive)
                 if '[searching]' in post_content:
                     embed_var = discord.Embed(title=post.title, description=post.selftext, color=8388640, url = post.url)
                     for i_guild in dict_db_guild:
