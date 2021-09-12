@@ -2,7 +2,8 @@ import json
 import os
 from logging import error
 
-fp_db_guild = 'db_guild.json'
+fp_db_guild = r'db_guild.json'
+fp_cache_reddit = r'cache_reddit.json'
 
 def writeDB(dict_to_dump):
     try:
@@ -24,5 +25,8 @@ def checkAndCreateDB():
     try:
         if (not os.path.isfile(fp_db_guild)):
             writeDB({})
+        if (not os.path.isfile(fp_cache_reddit)):
+            with open(fp_cache_reddit, 'w') as cache_reddit:
+                json.dump([], cache_reddit, indent = 4)
     except error:
         print(error)
