@@ -26,10 +26,8 @@ def checkAndCreateDB():
     try:
         if (not os.path.isfile(fp_db_guild)):
             writeDB({})
-            print('db_guild.json created successfully...')
         if (not os.path.isfile(fp_cache_reddit)):
             writeRedditCache(time.time() - 24*60*60)
-            print('cache_reddit.json created successfully...')
     except error:
         print(error)
     return
