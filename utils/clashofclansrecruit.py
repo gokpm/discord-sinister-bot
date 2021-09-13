@@ -6,9 +6,9 @@ import discord
 import asyncio
 
 async def redditLogin():
-    global archive
+    global latest_post_time
     global list_post
-    archive = readRedditCache()
+    latest_post_time = readRedditCache()
     reddit = asyncpraw.Reddit(
     client_id=os.environ['REDDIT_CLIENT_ID'],
     client_secret=os.environ['REDDIT_CLIENT_SECRET'],
@@ -20,18 +20,18 @@ async def redditLogin():
     return
 
 async def scoutReport(client):
-    global post
+    global post, latest_post_time
     await client.wait_until_ready()
     await redditLogin()
     while True:
         dict_db_guild = readDB()
         for post in list_post:
-            if not post.id in archive:
+            if post.created_utc > latest_post_time:
                 post_content = post.title + ' ' + post.selftext
                 post_content = post_content.lower().split()
-                archive.append(post.id)
-                writeRedditCache(archive)
                 if '[searching]' in post_content:
+                    latest_post_time = post.created_utc
+                    writeRedditCache(latest_post_time)
                     embed_var = discord.Embed(title=post.title, description=post.selftext, color=8388640, url = post.url)
                     for i_guild in dict_db_guild:
                         i_channel = dict_db_guild[i_guild]['channel']

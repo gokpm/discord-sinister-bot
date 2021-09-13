@@ -1,6 +1,7 @@
 import json
 import os
 from logging import error
+import time
 
 fp_db_guild = r'db_guild.json'
 fp_cache_reddit = r'cache_reddit.json'
@@ -25,18 +26,20 @@ def checkAndCreateDB():
     try:
         if (not os.path.isfile(fp_db_guild)):
             writeDB({})
+            print('db_guild.json created successfully...')
         if (not os.path.isfile(fp_cache_reddit)):
-            with open(fp_cache_reddit, 'w') as cache_reddit:
-                json.dump([], cache_reddit, indent = 4)
+            writeRedditCache(time.time() - 24*60*60)
+            print('cache_reddit.json created successfully...')
     except error:
         print(error)
+    return
 
 def readRedditCache():
     with open(fp_cache_reddit, 'r') as cache_reddit:
-        list_cache_reddit = json.load(cache_reddit)
-    return list_cache_reddit
+        data_read = json.load(cache_reddit)
+    return data_read
 
-def writeRedditCache(list_to_dump):
-    with open(fp_cache_reddit, 'r+') as cache_reddit:
-        json.dump(list_to_dump, cache_reddit, indent = 4)
+def writeRedditCache(data_to_dump):
+    with open(fp_cache_reddit, 'w') as cache_reddit:
+        json.dump(data_to_dump, cache_reddit, indent = 4)
     return
