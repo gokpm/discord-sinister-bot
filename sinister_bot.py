@@ -130,7 +130,7 @@ async def showPrefix(message):
 
 # --- Dependent Commands (i.e. Dependent on Server Prefix) ---
 @client.command()
-async def clear(ctx, *, amount = 10):
+async def clear(ctx, *, amount = 1):
     await ctx.channel.purge(limit=amount)
     return
 
