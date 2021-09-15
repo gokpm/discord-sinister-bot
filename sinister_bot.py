@@ -1,6 +1,6 @@
 '''
 Date last modified: 12-09-2021
-Contributed by:     @icemelting, @Sygmus-1897, @Lazycl0ud
+Contributed by:     @icemelting, @Sygmus-1897
 '''
 
 import discord
@@ -43,6 +43,19 @@ def getPrefix(client, message):
     return prefix_guild
 
 
+# --- Check if the set channel exists. If not, change the channel to bot defaults ---
+async def channelCheck(message):
+    if channel_guild != channel_bot:
+        i = 0
+        for channel in message.guild.channels:
+            if (channel_guild == str(channel.id)):
+                i += 1
+        if i < 1:
+            dict_db_guild.update({ id_guild: { 'prefix': prefix_guild, 'channel': channel_bot }})
+            writeDB(dict_db_guild)
+            updateGlobalVariables()
+    return
+            
 # --- client object initialization ---
 client = commands.Bot(command_prefix = getPrefix)
 
@@ -70,6 +83,7 @@ async def on_message(message):
     if message.author == client.user:
         return
     getPrefix(0, message)
+    await channelCheck(message)
     if message.content.startswith('?channel'):
         await showChannel(message)
     if message.content.startswith('?reset prefix'):
@@ -98,7 +112,7 @@ async def on_guild_remove(guild):
 
 # --- Indepedent Commands (i.e. Not Dependent on Server Prefix) ---
 async def showChannel(message):
-    channel_name = 'any'
+    channel_name = channel_bot
     for channel in message.guild.channels:
         if (channel_guild == str(channel.id)):
             channel_name = channel.name
@@ -108,30 +122,36 @@ async def showChannel(message):
     return
 
 async def resetPrefix(message):
-    dict_db_guild.update({ id_guild: { 'prefix': prefix_bot, 'channel': channel_guild}})
-    writeDB(dict_db_guild)
-    updateGlobalVariables()
-    await react(1, message)
+    if channel_guild == str(message.channel.id) or channel_guild == channel_bot:
+        if message.author.guild_permissions.administrator:
+            dict_db_guild.update({ id_guild: { 'prefix': prefix_bot, 'channel': channel_guild}})
+            writeDB(dict_db_guild)
+            updateGlobalVariables()
+            await react(1, message)
     return
 
 async def resetGuildChannel(message):
-    dict_db_guild.update({ id_guild: { 'prefix': prefix_guild, 'channel': channel_bot }})
-    writeDB(dict_db_guild)
-    updateGlobalVariables()
-    await react(1, message)
+    if channel_guild == str(message.channel.id) or channel_guild == channel_bot:
+        if message.author.guild_permissions.administrator:
+            dict_db_guild.update({ id_guild: { 'prefix': prefix_guild, 'channel': channel_bot }})
+            writeDB(dict_db_guild)
+            updateGlobalVariables()
+            await react(1, message)
     return
 
 async def showPrefix(message):
-    embed_var = discord.Embed(title="Prefix:", description=dict_db_guild[id_guild]['prefix'], color=8388640)
-    await message.channel.send(embed=embed_var)
-    await react(1, message)
+    if channel_guild == str(message.channel.id) or channel_guild == channel_bot:
+        embed_var = discord.Embed(title="Prefix:", description=dict_db_guild[id_guild]['prefix'], color=8388640)
+        await message.channel.send(embed=embed_var)
+        await react(1, message)
     return
 
 
 # --- Dependent Commands (i.e. Dependent on Server Prefix) ---
 @client.command()
 async def clear(ctx, *, amount = 1):
-    await ctx.channel.purge(limit=amount)
+    if ctx.message.author.guild_permissions.administrator:
+        await ctx.channel.purge(limit=amount + 1)
     return
 
 @client.command()
@@ -164,38 +184,38 @@ async def _set(ctx):
          
 @_set.command(aliases=['prefix'])
 async def setPrefix(ctx):
-    if channel_guild == str(ctx.message.channel.id) or channel_guild == 'any':
-        words_message_content = ctx.message.content.split()
-        if len(words_message_content) > 2:
-            new_prefix_guild = words_message_content[2]
-            if (new_prefix_guild == prefix_guild):
-                await ctx.message.channel.send("Change Aborted: New Prefix is same as Old Prefix!")
+    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+        if ctx.message.author.guild_permissions.administrator:
+            words_message_content = ctx.message.content.split()
+            if len(words_message_content) > 2:
+                new_prefix_guild = words_message_content[2]
+                if (new_prefix_guild == prefix_guild):
+                    await ctx.message.channel.send("Change Aborted: New Prefix is same as Old Prefix!")
+                    await react(0, ctx.message)
+                else:
+                    dict_db_guild.update({ id_guild: {'prefix': new_prefix_guild, 'channel': channel_guild }})
+                    writeDB(dict_db_guild)
+                    updateGlobalVariables()
+                    await react(1, ctx.message)
+            else: 
+                await ctx.message.channel.send("Please provide the new prefix!")
                 await react(0, ctx.message)
-            else:
-                dict_db_guild.update({ id_guild: {'prefix': new_prefix_guild, 'channel': channel_guild }})
-                writeDB(dict_db_guild)
-                updateGlobalVariables()
-                await react(1, ctx.message)
-        else: 
-            await ctx.message.channel.send("Please provide the new prefix!")
-            await react(0, ctx.message)
-    else: 
-        await ctx.message.channel.send("This channel is not supported!")
-        await react(0, ctx.message)
     return
 
 @_set.command(aliases=['channel'])
 async def setGuildChannel(ctx):
-    words_message_content = ctx.message.content.split()
-    set_channel_guild = words_message_content[2]
-    for iter_channel in ctx.message.guild.channels:
-        if ((set_channel_guild == str(iter_channel.id)) and (str(type(iter_channel)) == '<class \'discord.channel.TextChannel\'>')):
-            dict_db_guild.update({ id_guild: { 'prefix': prefix_guild, 'channel': set_channel_guild }})
-            writeDB(dict_db_guild)
-            updateGlobalVariables()
-            embed_var = discord.Embed(description='Channel Set', color=8388640)
-            await ctx.message.channel.send(embed=embed_var)
-    await react(1, ctx.message)
+    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+        if ctx.message.author.guild_permissions.administrator:
+            words_message_content = ctx.message.content.split()
+            set_channel_guild = words_message_content[2]
+            for iter_channel in ctx.message.guild.channels:
+                if ((set_channel_guild == str(iter_channel.id)) and (str(type(iter_channel)) == '<class \'discord.channel.TextChannel\'>')):
+                    dict_db_guild.update({ id_guild: { 'prefix': prefix_guild, 'channel': set_channel_guild }})
+                    writeDB(dict_db_guild)
+                    updateGlobalVariables()
+                    embed_var = discord.Embed(description='Channel Set', color=8388640)
+                    await ctx.message.channel.send(embed=embed_var)
+            await react(1, ctx.message)
     return
 
 
