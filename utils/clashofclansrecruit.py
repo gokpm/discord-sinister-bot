@@ -35,7 +35,7 @@ async def scoutReport(client):
                     embed_var = discord.Embed(title=post.title, description=post.selftext, color=8388640, url = post.url)
                     for i_guild in dict_db_guild:
                         i_channel = dict_db_guild[i_guild]['channel']
-                        if i_channel != 'any':
+                        if i_channel != channel_bot:
                             channel = client.get_channel(int(i_channel))
                             await channel.send(embed=embed_var)
         await asyncio.sleep(60)
