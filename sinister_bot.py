@@ -208,7 +208,6 @@ async def setGuildChannel(ctx):
                 set_channel_guild = words_message_content[2]
                 for iter_channel in ctx.message.guild.channels:
                     if ((set_channel_guild == str(iter_channel.id)) and (str(type(iter_channel)) == '<class \'discord.channel.TextChannel\'>')):
-                        print(id_guild, prefix_guild, channel_guild, wc_guild, wm_guild)
                         updateDB(new_channel = set_channel_guild)
                         embed_var = discord.Embed(description='Channel Set', color=8388640)
                         await ctx.message.channel.send(embed=embed_var)
@@ -255,7 +254,18 @@ async def react(k, message):
 
 def updateDB(flag = 1, new_guild = id_guild, new_prefix = prefix_guild, new_channel = channel_guild, new_wc = wc_guild, new_wm = wm_guild):
     global id_guild, prefix_guild, channel_guild, wc_guild, wm_guild
-    print(id_guild, prefix_guild, channel_guild, wc_guild, wm_guild)
+    
+    if new_guild is None:
+        new_guild = id_guild
+    if new_prefix is None:
+        new_prefix = prefix_guild
+    if new_channel is None:
+        new_channel  = channel_guild
+    if new_wc is None:
+        new_wc = wc_guild
+    if new_wm is None:
+        new_wm = wm_guild
+        
     if flag == 0:
         dict_db_guild.update({ new_guild: { 'prefix': prefix_bot, 'channel': channel_bot, 'welcome channel': wc_bot, 'welcome message': wm_bot}})
         writeDB(dict_db_guild)
