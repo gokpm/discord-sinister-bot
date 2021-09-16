@@ -34,10 +34,16 @@ async def scoutReport(client):
                     writeRedditCache(latest_post_time)
                     embed_var = discord.Embed(title=post.title, description=post.selftext, color=8388640, url = post.url)
                     for i_guild in dict_db_guild:
-                        i_channel = dict_db_guild[i_guild]['channel']
-                        if i_channel != 'any':
-                            channel = client.get_channel(int(i_channel))
-                            await channel.send(embed=embed_var)
+                        convert_guild = client.get_guild(int(i_guild))
+                        i_channel = dict_db_guild[i_guild]['reddit channel']
+                        i = 0
+                        if i_channel != 'N/A':
+                            for j_channel in convert_guild.channels:
+                                if str(j_channel.id) == i_channel:
+                                    i += 1
+                            if i > 0:
+                                channel = client.get_channel(int(i_channel))
+                                await channel.send(embed=embed_var)
         await asyncio.sleep(60)
     return
 
