@@ -282,7 +282,7 @@ async def resetPrefix(ctx):
     if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
             updateDB(new_prefix = prefix_bot)
-            await react(1, message)
+            await react(1, ctx.message)
     return
 
 @_reset.command(aliases=['pc'])
@@ -290,7 +290,7 @@ async def resetGuildChannel(ctx):
     if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
             updateDB(new_pc = pc_bot)
-            await react(1, message)
+            await react(1, ctx.message)
     return
     
 @_reset.command(aliases=['wc'])
@@ -298,7 +298,7 @@ async def resetWelcomeChannel(ctx):
     if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
             updateDB(new_wc = wc_bot)
-            await react(1, message)
+            await react(1, ctx.message)
     return 
 
 @_reset.command(aliases=['rc'])
@@ -306,7 +306,7 @@ async def resetRedditChannel(ctx):
     if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
             updateDB(new_rc = rc_bot)
-            await react(1, message)
+            await react(1, ctx.message)
     return
     
 @_reset.command(aliases=['wm'])
@@ -314,7 +314,7 @@ async def resetWelcomeMessage(ctx):
     if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
             updateDB(new_wm = wm_bot)
-            await react(1, message)
+            await react(1, ctx.message)
     return 
     
 
