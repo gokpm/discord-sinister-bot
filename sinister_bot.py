@@ -31,18 +31,19 @@ logger.addHandler(handler)
 
 # --- global variable declaration ---
 token = os.environ['BOT_TOKEN']
-id_guild = prefix_guild = channel_guild = wc_guild = wm_guild = dict_db_guild = None
+id_guild = prefix_guild = pc_guild = wc_guild = wm_guild = rc_guild = dict_db_guild = None
 prefix_bot = '!'
-channel_bot = wc_bot = wm_bot = 'N/A'
+pc_bot = wc_bot = wm_bot = rc_bot = 'N/A'
 
 checkAndCreateDB()
 
 # --- global variable initialization method --- 
 def getGuildValues(client, message):
-    global id_guild, prefix_guild, channel_guild, wc_guild, wm_guild
+    global id_guild, prefix_guild, pc_guild, wc_guild, wm_guild
     id_guild = str(message.guild.id)
     prefix_guild = dict_db_guild[id_guild]['prefix']
-    channel_guild = dict_db_guild[id_guild]['primary channel']
+    pc_guild = dict_db_guild[id_guild]['primary channel']
+    rc_guild = dict_db_guild[id_guild]['reddit channel']
     wc_guild = dict_db_guild[id_guild]['welcome channel']
     wm_guild = dict_db_guild[id_guild]['welcome message']
     return prefix_guild
@@ -50,16 +51,16 @@ def getGuildValues(client, message):
 
 # --- Check if the set channel exists. If not, change the channel to bot defaults ---
 async def channelCheck(message):
-    if (channel_guild != channel_bot) or (wc_guild != wc_bot):
+    if (pc_guild != pc_bot) or (wc_guild != wc_bot):
         i = 0
         j = 0
         for channel in message.guild.channels:
-            if (channel_guild == str(channel.id)):
+            if (pc_guild == str(channel.id)):
                 i += 1
             if (wc_guild == str(channel.id)):
                 j += 1
         if i < 1:
-            updateDB(new_channel = channel_bot)
+            updateDB(new_channel = pc_bot)
         if j < 1:
             updateDB(new_wc = wc_bot)    
     return
@@ -127,9 +128,9 @@ async def on_member_join(member):
 
 # --- Indepedent Commands (i.e. Not Dependent on Server Prefix) ---
 async def showChannel(message):
-    channel_name = channel_bot
+    channel_name = pc_bot
     for channel in message.guild.channels:
-        if (channel_guild == str(channel.id)):
+        if (pc_guild == str(channel.id)):
             channel_name = channel.name
     embed_var = discord.Embed(title="Set Channel:", description=channel_name, color=8388640)
     await message.channel.send(embed=embed_var)
@@ -137,7 +138,7 @@ async def showChannel(message):
     return
 
 async def showPrefix(message):
-    if channel_guild == str(message.channel.id) or channel_guild == channel_bot:
+    if pc_guild == str(message.channel.id) or pc_guild == pc_bot:
         embed_var = discord.Embed(title="Prefix:", description=dict_db_guild[id_guild]['prefix'], color=8388640)
         await message.channel.send(embed=embed_var)
         await react(1, message)
@@ -177,7 +178,7 @@ async def _set(ctx):
          
 @_set.command(aliases=['prefix'])
 async def setPrefix(ctx):
-    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+    if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
             words_message_content = ctx.message.content.split()
             if len(words_message_content) > 2:
@@ -195,14 +196,14 @@ async def setPrefix(ctx):
 
 @_set.command(aliases=['pc'])
 async def setGuildChannel(ctx):
-    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+    if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
             words_message_content = ctx.message.content.split()
             if len(words_message_content) > 2:
-                set_channel_guild = words_message_content[2]
+                set_pc_guild = words_message_content[2]
                 for iter_channel in ctx.message.guild.channels:
-                    if ((set_channel_guild == str(iter_channel.id)) and (str(type(iter_channel)) == '<class \'discord.channel.TextChannel\'>')):
-                        updateDB(new_channel = set_channel_guild)
+                    if ((set_pc_guild == str(iter_channel.id)) and (str(type(iter_channel)) == '<class \'discord.channel.TextChannel\'>')):
+                        updateDB(new_channel = set_pc_guild)
                         embed_var = discord.Embed(description='Channel Set', color=8388640)
                         await ctx.message.channel.send(embed=embed_var)
                 await react(1, ctx.message)
@@ -210,7 +211,7 @@ async def setGuildChannel(ctx):
     
 @_set.command(aliases=['wc'])
 async def setWelcomeChannel(ctx):
-    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+    if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
             words_message_content = ctx.message.content.split()
             if len(words_message_content) > 2:
@@ -223,9 +224,24 @@ async def setWelcomeChannel(ctx):
                 await react(1, ctx.message)
     return
     
+@_set.command(aliases=['rc'])
+async def setRedditChannel(ctx):
+    if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
+        if ctx.message.author.guild_permissions.administrator:
+            words_message_content = ctx.message.content.split()
+            if len(words_message_content) > 2:
+                new_rc_guild = words_message_content[2]
+                for iter_channel in ctx.message.guild.channels:
+                    if ((new_rc_guild == str(iter_channel.id)) and (str(type(iter_channel)) == '<class \'discord.channel.TextChannel\'>')):
+                        updateDB(new_rc = new_rc_guild)
+                        embed_var = discord.Embed(description='Channel Set', color=8388640)
+                        await ctx.message.channel.send(embed=embed_var)
+                await react(1, ctx.message)
+    return
+    
 @_set.command(aliases=['wm'])
 async def setWelcomeMessage(ctx):
-    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+    if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
             words_message_content = ctx.message.content.split()
             if len(words_message_content) > 2:
@@ -242,7 +258,7 @@ async def _reset(ctx):
 
 @_reset.command(aliases=['prefix'])    
 async def resetPrefix(ctx):
-    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+    if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
             updateDB(new_prefix = prefix_bot)
             await react(1, message)
@@ -250,27 +266,36 @@ async def resetPrefix(ctx):
 
 @_reset.command(aliases=['pc'])
 async def resetGuildChannel(ctx):
-    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+    if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
-            updateDB(new_channel = channel_bot)
+            updateDB(new_channel = pc_bot)
             await react(1, message)
     return
     
 @_reset.command(aliases=['wc'])
-async def resetGuildChannel(ctx):
-    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+async def resetWelcomeChannel(ctx):
+    if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
             updateDB(new_wc = wc_bot)
             await react(1, message)
     return 
+
+@_reset.command(aliases=['rc'])
+async def resetRedditChannel(ctx):
+    if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
+        if ctx.message.author.guild_permissions.administrator:
+            updateDB(new_rc = rc_bot)
+            await react(1, message)
+    return
     
 @_reset.command(aliases=['wm'])
-async def resetGuildChannel(ctx):
-    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+async def resetWelcomeMessage(ctx):
+    if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
             updateDB(new_wm = wm_bot)
             await react(1, message)
     return 
+    
 
 # --- Helper Functions ---
 async def react(k, message):
@@ -280,27 +305,32 @@ async def react(k, message):
         await message.add_reaction(THUMBS_DOWN)
     return
 
-def updateDB(flag = 1, new_guild = id_guild, new_prefix = prefix_guild, new_channel = channel_guild, new_wc = wc_guild, new_wm = wm_guild):
-    global id_guild, prefix_guild, channel_guild, wc_guild, wm_guild
+def updateDB(flag = 1, new_guild = id_guild, new_prefix = prefix_guild, new_channel = pc_guild, new_rc = rc_guild, new_wc = wc_guild, new_wm = wm_guild):
+    global id_guild, prefix_guild, pc_guild, wc_guild, rc_guild, wm_guild
     if new_guild is None:
         new_guild = id_guild
     if new_prefix is None:
         new_prefix = prefix_guild
     if new_channel is None:
-        new_channel  = channel_guild
+        new_channel  = pc_guild
     if new_wc is None:
         new_wc = wc_guild
     if new_wm is None:
-        new_wm = wm_guild   
+        new_wm = wm_guild
+    if new_rc is None:
+        new_rc = rc_guild
+    
     if flag == 0:
-        dict_db_guild.update({ new_guild: { 'prefix': prefix_bot, 'primary channel': channel_bot, 'welcome channel': wc_bot, 'welcome message': wm_bot}})
+        dict_db_guild.update({ new_guild: { 'prefix': prefix_bot, 'primary channel': pc_bot, 'reddit channel': rc_bot, 'welcome channel': wc_bot, 'welcome message': wm_bot}})
         writeDB(dict_db_guild)
     elif flag == 1:
-        dict_db_guild.update({ new_guild: { 'prefix': new_prefix, 'primary channel': new_channel, 'welcome channel': new_wc, 'welcome message': new_wm }})
+        dict_db_guild.update({ new_guild: { 'prefix': new_prefix, 'primary channel': new_channel, 'reddit channel': new_rc 'welcome channel': new_wc, 'welcome message': new_wm }})
         writeDB(dict_db_guild)
+        
     id_guild = new_guild
     prefix_guild = dict_db_guild[id_guild]["prefix"]
-    channel_guild = dict_db_guild[id_guild]["primary channel"]
+    pc_guild = dict_db_guild[id_guild]["primary channel"]
+    rc_guild = dict_db_guild[id_guild]["reddit channel"]
     wc_guild = dict_db_guild[id_guild]["welcome channel"]
     wm_guild= dict_db_guild[id_guild]["welcome message"]
     return
