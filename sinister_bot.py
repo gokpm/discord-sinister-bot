@@ -41,7 +41,7 @@ checkAndCreateDB()
 
 # --- global variable initialization method --- 
 def getGuildValues(client, message):
-    global id_guild, prefix_guild, pc_guild, wc_guild, wm_guild
+    global id_guild, prefix_guild, pc_guild, wc_guild, wm_guild, rc_guild
     id_guild = str(message.guild.id)
     prefix_guild = dict_db_guild[id_guild]['prefix']
     pc_guild = dict_db_guild[id_guild]['primary channel']
@@ -56,19 +56,19 @@ async def channelCheck(message):
     if (pc_guild != pc_bot) or (wc_guild != wc_bot) or (rc_guild != rc_bot):
         i = 0
         j = 0
-        z = 0
+        k = 0
         for channel in message.guild.channels:
             if (pc_guild == str(channel.id)):
                 i += 1
             if (wc_guild == str(channel.id)):
                 j += 1
             if (rc_guild == str(channel.id)):
-                z += 1
+                k += 1
         if i < 1:
             updateDB(new_pc = pc_bot)
         if j < 1:
             updateDB(new_wc = wc_bot) 
-        if z < 1:
+        if k < 1:
             updateDB(new_rc = rc_bot)  
     return
             
@@ -140,11 +140,20 @@ async def on_member_join(member):
 
 # --- Indepedent Commands (i.e. Not Dependent on Server Prefix) ---
 async def showChannel(message):
-    channel_name = pc_bot
+    pc_name = pc_bot
+    rc_name = rc_bot
+    wc_name = wc_bot
     for channel in message.guild.channels:
         if (pc_guild == str(channel.id)):
-            channel_name = channel.name
-    embed_var = discord.Embed(title="Set Channel:", description=channel_name, color=8388640)
+            pc_name = channel.name
+        if (rc_guild == str(channel.id)):
+            rc_name = channel.name
+        if (wc_guild == str(channel.id)):
+            wc_name = channel.name  
+    embed_var = discord.Embed(color=8388640)
+    embed_var.add_field(name = 'Primary Channel:', value = pc_name, inline = False)
+    embed_var.add_field(name = 'Reddit Channel:', value = rc_name, inline = False)
+    embed_var.add_field(name = 'Welcome Channel:', value = wc_name, inline = False)
     await message.channel.send(embed=embed_var)
     await react(1, message)
     return
