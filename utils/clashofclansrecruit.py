@@ -34,7 +34,7 @@ async def scoutReport(client):
                     writeRedditCache(latest_post_time)
                     embed_var = discord.Embed(title=post.title, description=post.selftext, color=8388640, url = post.url)
                     for i_guild in dict_db_guild:
-                        i_channel = dict_db_guild[i_guild]['channel']
+                        i_channel = dict_db_guild[i_guild]['primary channel']
                         if i_channel != 'N/A':
                             channel = client.get_channel(int(i_channel))
                             await channel.send(embed=embed_var)

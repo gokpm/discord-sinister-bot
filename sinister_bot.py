@@ -42,7 +42,7 @@ def getGuildValues(client, message):
     global id_guild, prefix_guild, channel_guild, wc_guild, wm_guild
     id_guild = str(message.guild.id)
     prefix_guild = dict_db_guild[id_guild]['prefix']
-    channel_guild = dict_db_guild[id_guild]['channel']
+    channel_guild = dict_db_guild[id_guild]['primary channel']
     wc_guild = dict_db_guild[id_guild]['welcome channel']
     wm_guild = dict_db_guild[id_guild]['welcome message']
     return prefix_guild
@@ -92,11 +92,7 @@ async def on_message(message):
     getGuildValues(0, message)
     await channelCheck(message)
     if message.content.startswith('?channel'):
-        await showChannel(message)
-    if message.content.startswith('?reset prefix'):
-        await resetPrefix(message)
-    if message.content.startswith('?reset channel'):
-        await resetGuildChannel(message)       
+        await showChannel(message)       
     if message.content.startswith('?prefix'):
         await showPrefix(message)
     await client.process_commands(message)
@@ -140,20 +136,6 @@ async def showChannel(message):
     await react(1, message)
     return
 
-async def resetPrefix(message):
-    if channel_guild == str(message.channel.id) or channel_guild == channel_bot:
-        if message.author.guild_permissions.administrator:
-            updateDB(new_prefix = prefix_bot)
-            await react(1, message)
-    return
-
-async def resetGuildChannel(message):
-    if channel_guild == str(message.channel.id) or channel_guild == channel_bot:
-        if message.author.guild_permissions.administrator:
-            updateDB(new_channel = channel_bot)
-            await react(1, message)
-    return
-
 async def showPrefix(message):
     if channel_guild == str(message.channel.id) or channel_guild == channel_bot:
         embed_var = discord.Embed(title="Prefix:", description=dict_db_guild[id_guild]['prefix'], color=8388640)
@@ -185,10 +167,6 @@ async def channel(ctx):
 @client.command()
 async def prefix(ctx): 
     pass
-    
-@client.command()
-async def reset(ctx): 
-    pass
 
 
 ## --- Grouped Commands (Set Prefix and Set Channel) ---
@@ -215,7 +193,7 @@ async def setPrefix(ctx):
                 await react(0, ctx.message)
     return
 
-@_set.command(aliases=['channel'])
+@_set.command(aliases=['pc'])
 async def setGuildChannel(ctx):
     if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
         if ctx.message.author.guild_permissions.administrator:
@@ -258,6 +236,41 @@ async def setWelcomeMessage(ctx):
                 await react(1, ctx.message)
     return
 
+@client.group(aliases=['reset'], invoke_without_subcommand=True)
+async def _reset(ctx):
+    pass
+
+@_reset.command(aliases=['prefix'])    
+async def resetPrefix(ctx):
+    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+        if ctx.message.author.guild_permissions.administrator:
+            updateDB(new_prefix = prefix_bot)
+            await react(1, message)
+    return
+
+@_reset.command(aliases=['pc'])
+async def resetGuildChannel(ctx):
+    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+        if ctx.message.author.guild_permissions.administrator:
+            updateDB(new_channel = channel_bot)
+            await react(1, message)
+    return
+    
+@_reset.command(aliases=['wc'])
+async def resetGuildChannel(ctx):
+    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+        if ctx.message.author.guild_permissions.administrator:
+            updateDB(new_wc = wc_bot)
+            await react(1, message)
+    return 
+    
+@_reset.command(aliases=['wm'])
+async def resetGuildChannel(ctx):
+    if channel_guild == str(ctx.message.channel.id) or channel_guild == channel_bot:
+        if ctx.message.author.guild_permissions.administrator:
+            updateDB(new_wm = wm_bot)
+            await react(1, message)
+    return 
 
 # --- Helper Functions ---
 async def react(k, message):
@@ -280,14 +293,14 @@ def updateDB(flag = 1, new_guild = id_guild, new_prefix = prefix_guild, new_chan
     if new_wm is None:
         new_wm = wm_guild   
     if flag == 0:
-        dict_db_guild.update({ new_guild: { 'prefix': prefix_bot, 'channel': channel_bot, 'welcome channel': wc_bot, 'welcome message': wm_bot}})
+        dict_db_guild.update({ new_guild: { 'prefix': prefix_bot, 'primary channel': channel_bot, 'welcome channel': wc_bot, 'welcome message': wm_bot}})
         writeDB(dict_db_guild)
     elif flag == 1:
-        dict_db_guild.update({ new_guild: { 'prefix': new_prefix, 'channel': new_channel, 'welcome channel': new_wc, 'welcome message': new_wm }})
+        dict_db_guild.update({ new_guild: { 'prefix': new_prefix, 'primary channel': new_channel, 'welcome channel': new_wc, 'welcome message': new_wm }})
         writeDB(dict_db_guild)
     id_guild = new_guild
     prefix_guild = dict_db_guild[id_guild]["prefix"]
-    channel_guild = dict_db_guild[id_guild]["channel"]
+    channel_guild = dict_db_guild[id_guild]["primary channel"]
     wc_guild = dict_db_guild[id_guild]["welcome channel"]
     wm_guild= dict_db_guild[id_guild]["welcome message"]
     return
