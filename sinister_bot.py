@@ -14,10 +14,11 @@ from utils.readWrite import *
 from utils.clashofclansrecruit import *
 from constants.emoji_unicodes import *
 
+# --- intents to to use 'member' functions ---
 intents = discord.Intents.default()
 intents.members = True
 
-
+# --- load env variables ---
 load_dotenv()
 
 
@@ -35,6 +36,7 @@ id_guild = prefix_guild = pc_guild = wc_guild = wm_guild = rc_guild = dict_db_gu
 prefix_bot = '!'
 pc_bot = wc_bot = wm_bot = rc_bot = 'N/A'
 
+# --- create the required .json files if not present ---
 checkAndCreateDB()
 
 # --- global variable initialization method --- 
@@ -51,18 +53,23 @@ def getGuildValues(client, message):
 
 # --- Check if the set channel exists. If not, change the channel to bot defaults ---
 async def channelCheck(message):
-    if (pc_guild != pc_bot) or (wc_guild != wc_bot):
+    if (pc_guild != pc_bot) or (wc_guild != wc_bot) or (rc_guild != rc_bot):
         i = 0
         j = 0
+        z = 0
         for channel in message.guild.channels:
             if (pc_guild == str(channel.id)):
                 i += 1
             if (wc_guild == str(channel.id)):
                 j += 1
+            if (rc_guild == str(channel.id)):
+                z += 1
         if i < 1:
-            updateDB(new_channel = pc_bot)
+            updateDB(new_pc = pc_bot)
         if j < 1:
-            updateDB(new_wc = wc_bot)    
+            updateDB(new_wc = wc_bot) 
+        if z < 1:
+            updateDB(new_rc = rc_bot)  
     return
             
 # --- client object initialization ---
@@ -86,6 +93,7 @@ async def on_ready():
     print('We have logged in as {0.user}'.format(client))
     return
     
+# --- on message ---    
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -98,13 +106,16 @@ async def on_message(message):
         await showPrefix(message)
     await client.process_commands(message)
     return
-    
+  
+  
+# --- on joining a guild ---    
 @client.event
 async def on_guild_join(guild):
     id_guild = str(guild.id)
     updateDB(0, new_guild = id_guild)
     return
-    
+
+# --- on leaving a guild ---    
 @client.event
 async def on_guild_remove(guild):
     id_guild = str(guild.id)
@@ -112,6 +123,7 @@ async def on_guild_remove(guild):
     writeDB(dict_db_guild)
     return
 
+# --- a member joining a guild, requires member intents --- 
 @client.event
 async def on_member_join(member):
     member_guild = str(member.guild.id)
@@ -203,7 +215,7 @@ async def setGuildChannel(ctx):
                 set_pc_guild = words_message_content[2]
                 for iter_channel in ctx.message.guild.channels:
                     if ((set_pc_guild == str(iter_channel.id)) and (str(type(iter_channel)) == '<class \'discord.channel.TextChannel\'>')):
-                        updateDB(new_channel = set_pc_guild)
+                        updateDB(new_pc = set_pc_guild)
                         embed_var = discord.Embed(description='Channel Set', color=8388640)
                         await ctx.message.channel.send(embed=embed_var)
                 await react(1, ctx.message)
@@ -268,7 +280,7 @@ async def resetPrefix(ctx):
 async def resetGuildChannel(ctx):
     if pc_guild == str(ctx.message.channel.id) or pc_guild == pc_bot:
         if ctx.message.author.guild_permissions.administrator:
-            updateDB(new_channel = pc_bot)
+            updateDB(new_pc = pc_bot)
             await react(1, message)
     return
     
@@ -305,14 +317,14 @@ async def react(k, message):
         await message.add_reaction(THUMBS_DOWN)
     return
 
-def updateDB(flag = 1, new_guild = id_guild, new_prefix = prefix_guild, new_channel = pc_guild, new_rc = rc_guild, new_wc = wc_guild, new_wm = wm_guild):
+def updateDB(flag = 1, new_guild = id_guild, new_prefix = prefix_guild, new_pc = pc_guild, new_rc = rc_guild, new_wc = wc_guild, new_wm = wm_guild):
     global id_guild, prefix_guild, pc_guild, wc_guild, rc_guild, wm_guild
     if new_guild is None:
         new_guild = id_guild
     if new_prefix is None:
         new_prefix = prefix_guild
-    if new_channel is None:
-        new_channel  = pc_guild
+    if new_pc is None:
+        new_pc  = pc_guild
     if new_wc is None:
         new_wc = wc_guild
     if new_wm is None:
@@ -324,7 +336,7 @@ def updateDB(flag = 1, new_guild = id_guild, new_prefix = prefix_guild, new_chan
         dict_db_guild.update({ new_guild: { 'prefix': prefix_bot, 'primary channel': pc_bot, 'reddit channel': rc_bot, 'welcome channel': wc_bot, 'welcome message': wm_bot}})
         writeDB(dict_db_guild)
     elif flag == 1:
-        dict_db_guild.update({ new_guild: { 'prefix': new_prefix, 'primary channel': new_channel, 'reddit channel': new_rc 'welcome channel': new_wc, 'welcome message': new_wm }})
+        dict_db_guild.update({ new_guild: { 'prefix': new_prefix, 'primary channel': new_pc, 'reddit channel': new_rc 'welcome channel': new_wc, 'welcome message': new_wm }})
         writeDB(dict_db_guild)
         
     id_guild = new_guild
