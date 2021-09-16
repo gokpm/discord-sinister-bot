@@ -336,7 +336,7 @@ def updateDB(flag = 1, new_guild = id_guild, new_prefix = prefix_guild, new_pc =
         dict_db_guild.update({ new_guild: { 'prefix': prefix_bot, 'primary channel': pc_bot, 'reddit channel': rc_bot, 'welcome channel': wc_bot, 'welcome message': wm_bot}})
         writeDB(dict_db_guild)
     elif flag == 1:
-        dict_db_guild.update({ new_guild: { 'prefix': new_prefix, 'primary channel': new_pc, 'reddit channel': new_rc 'welcome channel': new_wc, 'welcome message': new_wm }})
+        dict_db_guild.update({ new_guild: { 'prefix': new_prefix, 'primary channel': new_pc, 'reddit channel': new_rc, 'welcome channel': new_wc, 'welcome message': new_wm }})
         writeDB(dict_db_guild)
         
     id_guild = new_guild

@@ -41,7 +41,7 @@ async def scoutReport(client):
                             for j_channel in convert_guild.channels:
                                 if str(j_channel.id) == i_channel:
                                     i += 1
-                            if i > 1:
+                            if i > 0:
                                 channel = client.get_channel(int(i_channel))
                                 await channel.send(embed=embed_var)
         await asyncio.sleep(60)
