@@ -1,8 +1,3 @@
-'''
-Date last modified: 12-09-2021
-Contributed by:     @icemelting, @Sygmus-1897
-'''
-
 import discord
 import logging
 import os
