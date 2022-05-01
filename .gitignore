@@ -1,0 +1,8 @@
+*.json
+*.log
+*.txt
+.env
+constants/__pycache__/
+utils/__pycache__/
+__pycache__/
+env/
